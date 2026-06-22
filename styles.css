@@ -23,7 +23,7 @@
 }
 
 body {
-  background-color: var(--bg-color);
+  background: linear-gradient(rgba(12, 12, 14, 0.85), rgba(12, 12, 14, 0.85)), url('ground2.png') repeat;
   color: var(--text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
