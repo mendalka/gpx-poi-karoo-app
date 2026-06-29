@@ -46,6 +46,19 @@ const POI_MAPPING = {
   "woda": "Water"
 };
 
+// POI type colors for map visualization
+const POI_COLORS = {
+  "Food": "#ff9800",
+  "Water": "#29b6f6",
+  "Parking": "#78909c",
+  "Camping": "#66bb6a",
+  "Lodging": "#ab47bc",
+  "Geocache": "#fdd835",
+  "Summit": "#ef5350",
+  "Generic": "#90a4ae",
+  "Danger": "#ff1744"
+};
+
 // State Variables
 let originalFileName = "";
 let processedGpxContent = "";
@@ -200,6 +213,9 @@ function processGpx(gpxText) {
 
   // Update UI Elements
   displayResults(totalWpts, mappedWpts, typeCounts);
+
+  // Draw route & POI visualization after DOM reflow
+  requestAnimationFrame(() => drawVisualization(xmlDoc));
 }
 
 function displayResults(total, mapped, counts) {
@@ -226,6 +242,126 @@ function displayResults(total, mapped, counts) {
   // Toggle Card visibility
   uploadZone.style.display = "none";
   resultsCard.style.display = "block";
+}
+
+// Route & POI canvas visualization (offline, no map tiles needed)
+function drawVisualization(xmlDoc) {
+  const canvas = document.getElementById("map-canvas");
+  const preview = document.getElementById("map-preview");
+  if (!canvas || !preview) return;
+
+  // Collect track/route points
+  const track = [];
+  for (const tag of ["trkpt", "rtept"]) {
+    const els = xmlDoc.getElementsByTagName(tag);
+    for (let i = 0; i < els.length; i++) {
+      track.push({
+        lat: parseFloat(els[i].getAttribute("lat")),
+        lon: parseFloat(els[i].getAttribute("lon"))
+      });
+    }
+  }
+
+  // Collect mapped waypoints
+  const pois = [];
+  const wpts = xmlDoc.getElementsByTagName("wpt");
+  for (let i = 0; i < wpts.length; i++) {
+    const w = wpts[i];
+    const nameEl = w.getElementsByTagName("name")[0];
+    const typeEl = w.getElementsByTagName("type")[0];
+    pois.push({
+      lat: parseFloat(w.getAttribute("lat")),
+      lon: parseFloat(w.getAttribute("lon")),
+      name: nameEl ? nameEl.textContent.trim() : "",
+      type: typeEl ? typeEl.textContent.trim() : "Generic"
+    });
+  }
+
+  const all = [...track, ...pois];
+  if (all.length === 0) { preview.style.display = "none"; return; }
+  preview.style.display = "block";
+
+  // Bounding box with padding
+  let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+  all.forEach(p => {
+    minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
+    minLon = Math.min(minLon, p.lon); maxLon = Math.max(maxLon, p.lon);
+  });
+  const bPad = 0.15;
+  const rawLatR = (maxLat - minLat) || 0.005;
+  const rawLonR = (maxLon - minLon) || 0.005;
+  minLat -= rawLatR * bPad; maxLat += rawLatR * bPad;
+  minLon -= rawLonR * bPad; maxLon += rawLonR * bPad;
+  const latR = maxLat - minLat;
+  const lonR = maxLon - minLon;
+
+  // Canvas sizing with Mercator latitude correction
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = preview.clientWidth;
+  const cosLat = Math.cos(((minLat + maxLat) / 2) * Math.PI / 180);
+  const cssH = Math.min(Math.max(Math.round(cssW * (latR / (lonR * cosLat))), 180), 400);
+
+  canvas.style.width = cssW + "px";
+  canvas.style.height = cssH + "px";
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  // Coordinate projection (lon→X, lat→Y inverted for screen)
+  const mg = 35;
+  const dW = cssW - 2 * mg, dH = cssH - 2 * mg;
+  const toX = lon => mg + ((lon - minLon) / lonR) * dW;
+  const toY = lat => mg + ((maxLat - lat) / latR) * dH;
+
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  // Draw route line
+  if (track.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(toX(track[0].lon), toY(track[0].lat));
+    for (let i = 1; i < track.length; i++) {
+      ctx.lineTo(toX(track[i].lon), toY(track[i].lat));
+    }
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+  }
+
+  // Draw POI markers with labels
+  ctx.font = "500 10px Inter, sans-serif";
+  ctx.textBaseline = "middle";
+
+  pois.forEach(p => {
+    const x = toX(p.lon), y = toY(p.lat);
+    const col = POI_COLORS[p.type] || POI_COLORS["Generic"];
+
+    // Glow ring
+    ctx.beginPath();
+    ctx.arc(x, y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = col + "35";
+    ctx.fill();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = col;
+    ctx.fill();
+
+    // Label
+    let label = p.name || p.type;
+    if (label.length > 22) label = label.slice(0, 20) + "\u2026";
+    const tw = ctx.measureText(label).width;
+    const lx = (x > cssW * 0.55) ? x - tw - 12 : x + 10;
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillRect(lx - 3, y - 7, tw + 6, 14);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.textAlign = "left";
+    ctx.fillText(label, lx, y);
+  });
 }
 
 // Download action

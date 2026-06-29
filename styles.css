@@ -260,6 +260,22 @@ h1 {
   color: var(--text-primary);
 }
 
+
+/* Route & POI Map Preview */
+.map-preview {
+  display: none;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.map-preview canvas {
+  width: 100%;
+  display: block;
+}
+
 /* Buttons */
 .btn {
   width: 100%;
