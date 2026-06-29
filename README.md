@@ -21,7 +21,7 @@ A responsive, offline-first Progressive Web App (PWA) to convert GPX waypoints i
 
 ## Under the Hood
 
-The web app maps various custom POI types to one of the **8 supported case-sensitive Karoo POI types** (`Food`, `Parking`, `Camping`, `Lodging`, `Geocache`, `Summit`, `Generic`, `Danger`) and ensures that both `<type>` and `<sym>` tags are correctly added to each waypoint.
+The web app maps various custom POI types to one of the **9 supported case-sensitive Karoo POI types** (`Food`, `Water`, `Parking`, `Camping`, `Lodging`, `Geocache`, `Summit`, `Generic`, `Danger`) and ensures that both `<type>` and `<sym>` tags are correctly added to each waypoint.
 
 ## Development
 

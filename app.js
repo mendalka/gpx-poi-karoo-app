@@ -14,7 +14,7 @@ const POI_MAPPING = {
   "fuel_station": "Generic",
   "food": "Food",
   "coffee": "Food",
-  "water": "Food",
+  "water": "Water",
   "information": "Generic",
   "toilet": "Generic",
   "first_aid": "Generic",
@@ -26,18 +26,24 @@ const POI_MAPPING = {
   "bakery": "Food",
   "café": "Food",
   "cafe": "Food",
-  "cemetery (drinking water)": "Food",
+  "cemetery (drinking water)": "Water",
   "convenience store": "Food",
-  "drinking water": "Food",
+  "drinking water": "Water",
+  "drinking_water": "Water",
   "fast food": "Food",
+  "fountain": "Water",
   "gas station": "Generic",
   "ice cream parlor": "Food",
   "kiosk": "Generic",
   "other": "Generic",
   "restaurant": "Food",
+  "spring": "Water",
   "supermarket": "Food",
   "toilets": "Generic",
-  "vending machine": "Food"
+  "vending machine": "Food",
+  "water intake point": "Water",
+  "water point": "Water",
+  "woda": "Water"
 };
 
 // State Variables
