@@ -43,7 +43,34 @@ const POI_MAPPING = {
   "vending machine": "Food",
   "water intake point": "Water",
   "water point": "Water",
-  "woda": "Water"
+  "woda": "Water",
+
+  // Additional types (Komoot, RideWithGPS, etc.)
+  "aid station": "Food",
+  "art": "Generic",
+  "beach": "Generic",
+  "bike shop": "Generic",
+  "bridge": "Generic",
+  "checkpoint": "Generic",
+  "crossing": "Generic",
+  "first aid": "Generic",
+  "gear": "Generic",
+  "info": "Generic",
+  "meeting point": "Generic",
+  "obstacle": "Danger",
+  "park": "Generic",
+  "pub": "Food",
+  "rest area": "Generic",
+  "segment end": "Generic",
+  "segment start": "Generic",
+  "service": "Generic",
+  "sharp curve": "Danger",
+  "shower": "Water",
+  "steep incline": "Danger",
+  "transition": "Generic",
+  "transport": "Generic",
+  "tunnel": "Generic",
+  "valley": "Generic"
 };
 
 // POI type colors for map visualization
@@ -173,6 +200,15 @@ function processGpx(gpxText) {
       const originalType = typeNode.textContent.trim();
       const normalizedType = originalType.toLowerCase();
       const mappedType = POI_MAPPING[normalizedType] || "Generic";
+
+      // If type changed, preserve original type in <name> and <desc>
+      if (originalType.toLowerCase() !== mappedType.toLowerCase()) {
+        const suffix = ` (${originalType})`;
+        const nameNode = wpt.getElementsByTagName("name")[0];
+        if (nameNode) nameNode.textContent = nameNode.textContent.trim() + suffix;
+        const descNode = wpt.getElementsByTagName("desc")[0];
+        if (descNode) descNode.textContent = descNode.textContent.trim() + suffix;
+      }
 
       // Update <type>
       typeNode.textContent = mappedType;
